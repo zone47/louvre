@@ -3,7 +3,7 @@
 header('Content-type: application/json');
 set_time_limit(600);
 include "simple_html_dom.php";
-$date_de_debut_de_recolte=20180601;
+$date_de_debut_de_recolte=20180801;
 $html = contents_get_html(file_get_contents("https://www.louvre.fr/data/manifestation2"));
 $evenements_audito=array();
 function strip_single_tag($str,$tag){
@@ -12,8 +12,8 @@ function strip_single_tag($str,$tag){
         $str=preg_replace('/<'.$tag.'[^>]*>/i', '', $str1);
     }
     return $str;
-}
-foreach($html->find('tr ') as $tr){
+}$cpt2=0;
+foreach($html->find('tr ') as $tr){$cpt2++;if($cpt2>120)break;
 	$props=array(
 		"id"=>'',
 		"titre"=>'',
@@ -27,7 +27,9 @@ foreach($html->find('tr ') as $tr){
 		"poste"=>'',
 		"maj"=>'',
 		"auditorium"=>false,
-		"description"=>''
+		"description"=>'',
+		"page_image"=>'',
+		"image"=>''
 	);
 	$cpt=0;
 	foreach($tr->find('td ') as $td){
@@ -77,6 +79,11 @@ foreach($html->find('tr ') as $tr){
 			case 9:{ // Date de mise à jour
 				$props["maj"]=trim(strip_tags($td));
 			}break;
+			case 10:{ // Page image
+				foreach($td->find("a") as $link){
+					$props["page_image"]="https://www.louvre.fr".$link->href;
+				}
+			}break;
 		}
 		$cpt++;
 	}
@@ -90,6 +97,14 @@ foreach($html->find('tr ') as $tr){
 			$tarif_debut=strpos($informations,"<p>Tarif");
 			$tarif_fin=strpos($informations,"<p>R&eacute;servation");
 			$props["tarif"]=trim(strip_tags(substr($informations,$tarif_debut,$tarif_fin-$tarif_debut)));
+		}
+	}
+	// Récupération de l'image
+	if ($props["page_image"]!=""){
+		$html_image = contents_get_html(file_get_contents($props["page_image"]));
+		foreach($html_image->find('img[class=imagecache-235x196]') as $imgitem){
+			$props["image"]=str_replace("imagecache/235x196/","",$imgitem->src);
+			$props["image"]=substr($props["image"],0,strpos($props["image"],"?"));
 		}
 	}
 	if ($props["auditorium"]){
