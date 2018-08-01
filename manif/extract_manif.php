@@ -12,8 +12,8 @@ function strip_single_tag($str,$tag){
         $str=preg_replace('/<'.$tag.'[^>]*>/i', '', $str1);
     }
     return $str;
-}$cpt2=0;
-foreach($html->find('tr ') as $tr){$cpt2++;if($cpt2>120)break;
+}
+foreach($html->find('tr ') as $tr){
 	$props=array(
 		"id"=>'',
 		"titre"=>'',
